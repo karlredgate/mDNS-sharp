@@ -358,6 +358,7 @@ namespace Redgate.Net.mDNS {
 	        if ( nic.Supports(NetworkInterfaceComponent.IPv4) == false ) continue;
 	        IPInterfaceProperties properties = nic.GetIPProperties();
 	        IPv4InterfaceProperties v4_props = properties.GetIPv4Properties();
+                System.Console.WriteLine( "listening on interface: {0}", nic.Name );
 	        return v4_props.Index;
 	    }
 	    throw new SystemException("could not find an interface index");
@@ -385,9 +386,13 @@ namespace Redgate.Net.mDNS {
 	    Resolver receiver = (Resolver)arg;
 	    try {
 	        receiver.GatherResponses();
-	    } catch ( System.Threading.ThreadAbortException ) {
+	    } catch ( System.Threading.ThreadAbortException e ) {
 		// ignore
 		System.Console.WriteLine( "resolver thread aborted" );
+		System.Console.WriteLine( "message: {0}", e.Message );
+		System.Console.WriteLine( "source: {0}", e.Source );
+		System.Console.WriteLine( "stack: {0}", e.StackTrace );
+		System.Console.WriteLine( "data: {0}", e.Data );
 	    }
 	}
 
@@ -395,7 +400,7 @@ namespace Redgate.Net.mDNS {
 	GatherResources() {
 	    Thread thread = new Thread( ReceiverThread );
 	    thread.Start( this );
-	    Thread.Sleep(3000);
+	    Thread.Sleep(5000);
 	    thread.Abort();
 	}
 
@@ -427,8 +432,14 @@ namespace Redgate.Net.mDNS {
 	As( string domain ) {
 	    ArrayList addresses = new ArrayList();
             foreach ( Resource resource in resources ) {
-		if ( ! (resource is A) ) continue;
-		if ( resource.domain != domain ) continue;
+		if ( ! (resource is A) ) {
+	            System.Console.WriteLine( "resource is not A record" );
+                    continue;
+                }
+		if ( resource.domain != domain ) {
+	            System.Console.WriteLine( "resource '{0}' is not '{1}'", resource.domain, domain );
+                    continue;
+                }
 		A a = (A)resource;
 		addresses.Add( a.address );
             }
@@ -495,3 +506,5 @@ namespace Redgate.Net.mDNS {
     }
 
 }
+
+/* vim: set autoindent expandtab sw=4 : */
